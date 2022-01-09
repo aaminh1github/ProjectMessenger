@@ -32,11 +32,11 @@ class LoginViewController: UIViewController {
             }
             let user = result.user
             print("Logged in")
-            DispatchQueue.main.async {
+           
                
                 strongSelf.navigationController?.dismiss(animated: true, completion: nil)
 
-            }
+            
                     }
         email.text = ""
         password.text = ""

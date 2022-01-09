@@ -19,36 +19,47 @@ class RegisterViewController: UIViewController {
         guard let firstname  = firstName.text,
                 let lastname = lastName.text,
                 let userEmail = email.text,
-        let userpass = password.text
+        let userpass = password.text,
+        !firstname.isEmpty,
+        !lastname.isEmpty,
+        !userEmail.isEmpty,
+        !userpass.isEmpty
         
         else {
             print("errror saving the data")
             return
         }
+        databaseManager.shared.isExist(whith: userEmail, completion: {[weak self] availabl in
+            guard let strongSelf = self else {
+                return
+            }
+            guard !availabl else{
+            strongSelf.alertUserLoginError(message: "the email is already exist")
+                return
+            }
+        }
+        )
         FirebaseAuth.Auth.auth().createUser(withEmail: userEmail, password: userpass, completion: {[weak self] authResult, error in
-           
-                guard let result = authResult , error == nil else {
+            guard let strongSelf = self else{
+                              return
+                          }
+                guard  authResult != nil , error == nil else {
                     print("Error cureating user")
                     return
                 }
-            let user = result.user
-            print("created user \(user)")
-            DispatchQueue.main.async {
-                guard let strongSelf = self else{
-                    return
-                }
-                strongSelf.navigationController?.dismiss(animated: true, completion: nil)
+           
+            databaseManager.shared.insertUser(with: newMessengerUser(first_name: firstname, last_name: lastname, email: userEmail))
+            print("created user \(userEmail)")
 
-            }
-            
-            
             
             
 //            UserDefaults.standard.setValue(self.email, forKey: "email")
 //            UserDefaults.standard.setValue("\(self.firstName) \(lastName)", forKey: "name")
 
+            strongSelf.navigationController?.dismiss(animated: true, completion: nil)
 
              })
+
     }
     @IBOutlet weak var ProfileImage: UIImageView!
     override func viewDidLoad() {
@@ -66,7 +77,14 @@ class RegisterViewController: UIViewController {
         presentPhotoActionSheet()
         
     }
-   
+    func alertUserLoginError(message: String = "Please enter all information to create a new account.") {
+        let alert = UIAlertController(title: "Woops",
+                                      message: message,
+                                      preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title:"Dismiss",
+                                      style: .cancel, handler: nil))
+        present(alert, animated: true)
+    }
 
     /*
     // MARK: - Navigation
